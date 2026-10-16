@@ -28,7 +28,7 @@ This repository asks a narrower question. If the SWAP result is right, how large
 
 In this model ISN He atoms move on Keplerian hyperbolae; radiation pressure is neglected (see [Limitations](#limitations-and-next-steps)). Suppose the ionization rate falls off as β(r) = β₀ (1 au / r)². Along a Keplerian orbit the true anomaly changes as dν/dt = h / r², so the exposure has a closed form:
 
-$$\int \beta\,dt \;=\; \beta_0\,\frac{(1\,\mathrm{au})^2\,\Delta\nu}{h} \;\equiv\; \beta_0 X ,$$
+$$\int \beta\,dt = \beta_0\,\frac{(1\,\mathrm{au})^2\,\Delta\nu}{h} \equiv \beta_0 X ,$$
 
 where Δν is the angle swept since infinity and h is the specific angular momentum. Two orbits reach each point near the Sun:
 
