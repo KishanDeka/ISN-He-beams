@@ -1,0 +1,7 @@
+numpy>=1.22
+scipy>=1.8
+matplotlib>=3.5
+pytest
+jupyter
+nbconvert
+ipykernel
