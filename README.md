@@ -90,26 +90,19 @@ PNG and PDF versions are in `figures/`.
 
 ## Method
 
-1. **Interstellar gas at infinity.** The gas is a drifting Maxwellian with the IBEX ISN He consensus parameters (McComas et al. 2015): *v* = 25.4 km s⁻¹, λ = 255.7°, β = 5.1°, T = 7500 K, and *n* = 0.015 cm⁻³.
-2. **Liouville mapping.** At every point the distribution function is f(**r**, **v**) = f_LISM(**v**_∞) · exp(−β₀X). Here **v**_∞ and X come from an analytic back-trace of the hyperbola (`isnhe/kepler.py`): the eccentricity vector, the true anomaly, and the velocity on the incoming asymptote at ν = −arccos(−1/e).
-3. **Moments.** Densities and fluxes are midpoint-rule integrals on a grid of directions × speeds:
-   - density: ∫ f d³v in the solar frame;
-   - flux: ∫ f v_rel³ dv_rel dΩ over arrival directions, in the frame of an observer on a circular 1 au orbit moving at 29.78 km s⁻¹.
+1. **Interstellar gas at infinity.** The gas is a drifting Maxwellian with the IBEX ISN He consensus parameters (McComas et al. 2015): $v = 25.4\text{ km s}^{-1}$, $\lambda = 255.7^\circ$, $\beta = 5.1^\circ$, $T = 7500\text{ K}$, and $n = 0.015\text{ cm}^{-3}$.
+2. **Liouville mapping.** At every point the distribution function is:$$f(\mathbf{r}, \mathbf{v}) = f_{\text{LISM}}(\mathbf{v}_\infty) \cdot \exp(-\beta_0 X)$$Here $\mathbf{v}_\infty$ and $X$ come from an analytic back-trace of the hyperbola (isnhe/kepler.py): the eccentricity vector, the true anomaly, and the velocity on the incoming asymptote at $\nu = -\arccos(-1/e)$.
+3. **Moments.** Densities and fluxes are midpoint-rule integrals on a grid of directions $\times$ speeds:
 
-   Each grid cell is stored once with its X and swept angle (`VelocitySamples`). Rescaling to any β₀ (`exp(−β₀X)`), any density (linear) or any energy threshold therefore needs no recomputation.
+    Density:$$n = \int f \, d^3 v$$(in the solar frame)
+    
+    Flux:$$F = \int f v_{\text{rel}}^3 \, dv_{\text{rel}} d\Omega$$(over arrival directions, in the frame of an observer on a circular $1\text{ au}$ orbit moving at $29.78\text{ km s}^{-1}$)
+    
+    Each grid cell is stored once with its $X$ and swept angle (VelocitySamples). Rescaling to any $\beta_0$ ($\exp(-\beta_0 X)$), any density (linear) or any energy threshold therefore needs no recomputation.
 4. **Observables.**
    - Sky-integrated beam fluxes, flux-weighted energies, beam centroids and widths, and scan circles for a Sun-pointing spinner with an arbitrary boresight (pivot) angle.
    - Poisson counting statistics with the Baker & Cousins (1984) likelihood, as used by Antonik et al. (2025).
-   - ⟨X⟩ = −d ln F / dβ₀.
-
-## Validation (`pytest`)
-
-- The back-traced **v**_∞ and exposure agree with a DOP853 numerical integration of the orbit (exposure to <10⁻³; speed at infinity to 10⁻⁷).
-- Swept angles and the direct/indirect classification agree with orbits constructed from orbital elements.
-- Far from the Sun (3000 au) the model returns the input density (to 0.3%) and bulk velocity (to 0.1 km s⁻¹).
-- Upwind at 1 au, β₀ = 10⁻⁷ s⁻¹ gives *n* = 0.011 cm⁻³; Swaczyna et al. (2025, ApJS 277, 17) adopt ≈0.01 cm⁻³ for solar minimum.
-- The February direct beam peaks at ≈129 eV in the spacecraft frame, consistent with the ~130 eV seen by IBEX-Lo.
-- Grid convergence: the production grid (2°, 1 km s⁻¹) agrees with a 4× finer grid to ≲10⁻⁴, and to ~10⁻³ inside the focusing cone (`data/convergence.txt`).
+   - Average extinction factor: $$\langle X \rangle = -\frac{d \ln F}{d\beta_0}$$
 
 ## Limitations and next steps
 
@@ -122,28 +115,6 @@ The model is scoped as a feasibility study of the beam-ratio signal. A full IMAP
 5. **Instrument response and energy matching.** The model uses sky-integrated fluxes. It does not include the IMAP-Lo collimator, the pivot schedule of Kubiak et al. (2023), the spin-axis offset, the energy-dependent sputtering efficiency or the duty cycle. Choosing direct/indirect pairs at matched energies, as recommended by Bzowski et al. (2023), would reduce the efficiency systematic.
 6. **Correlated inflow parameters.** Inflow parameters are perturbed one at a time here. In practice, the speed, direction and temperature from IBEX are correlated and are derived from the same direct-beam data. A joint fit of the inflow parameters and β₀ to both beams is the consistent approach.
 7. **Geometry.** IMAP's position at L1 (0.99 au) and the eccentricity of Earth's orbit are ignored. Collisional filtration of He in the outer heliosheath is neglected; it is small.
-
-## Repository layout
-
-```
-src/isnhe/
-    constants.py      physical constants, unit conventions
-    lism.py           InflowParams, drifting Maxwellian at infinity
-    kepler.py         analytic back-tracing: v_inf, swept angle, exposure X
-    hotmodel.py       sky grid, observer state, VelocitySamples, flux and density
-    observables.py    annual beam fluxes, <X>, counting statistics, scan circles
-scripts/
-    compute_annual_beams.py     beam fluxes vs observer longitude x beta0 x energy threshold
-    compute_skymaps.py          direct/indirect sky maps
-    compute_systematics.py      one-at-a-time inflow-parameter perturbations
-    compute_density_profile.py  density along Earth's orbit
-    check_convergence.py        grid-convergence table
-    run_all.sh                  runs everything (~20 min on 2 cores)
-notebooks/figures.ipynb         makes all figures from data/
-data/                           outputs of the scripts (.npz, small)
-figures/                        PNG + PDF figures
-tests/                          pytest suite
-```
 
 ## Installation and reproduction
 
