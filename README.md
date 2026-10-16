@@ -90,19 +90,38 @@ PNG and PDF versions are in `figures/`.
 
 ## Method
 
-1. **Interstellar gas at infinity.** The gas is a drifting Maxwellian with the IBEX ISN He consensus parameters (McComas et al. 2015): $v = 25.4\text{ km s}^{-1}$, $\lambda = 255.7^\circ$, $\beta = 5.1^\circ$, $T = 7500\text{ K}$, and $n = 0.015\text{ cm}^{-3}$.
-2. **Liouville mapping.** At every point the distribution function is:$$f(\mathbf{r}, \mathbf{v}) = f_{\text{LISM}}(\mathbf{v}_\infty) \cdot \exp(-\beta_0 X)$$Here $\mathbf{v}_\infty$ and $X$ come from an analytic back-trace of the hyperbola (isnhe/kepler.py): the eccentricity vector, the true anomaly, and the velocity on the incoming asymptote at $\nu = -\arccos(-1/e)$.
-3. **Moments.** Densities and fluxes are midpoint-rule integrals on a grid of directions $\times$ speeds:
+1. **Interstellar gas at infinity.** The gas is a drifting Maxwellian with the IBEX ISN He consensus parameters (McComas et al. 2015): $v_\infty = 25.4\ \mathrm{km\,s^{-1}}$, $\lambda = 255.7^\circ$, $\beta = 5.1^\circ$, $T = 7500\ \mathrm{K}$ and $n_\mathrm{ISN} = 0.015\ \mathrm{cm^{-3}}$.
 
-    Density:$$n = \int f \, d^3 v$$(in the solar frame)
-    
-    Flux:$$F = \int f v_{\text{rel}}^3 \, dv_{\text{rel}} d\Omega$$(over arrival directions, in the frame of an observer on a circular $1\text{ au}$ orbit moving at $29.78\text{ km s}^{-1}$)
-    
-    Each grid cell is stored once with its $X$ and swept angle (VelocitySamples). Rescaling to any $\beta_0$ ($\exp(-\beta_0 X)$), any density (linear) or any energy threshold therefore needs no recomputation.
+2. **Liouville mapping.** At every point the distribution function is
+
+   $$
+   f(\mathbf{r}, \mathbf{v}) = f_\mathrm{LISM}(\mathbf{v}_\infty)\, \exp(-\beta_0 X).
+   $$
+
+   Here $\mathbf{v}_\infty$ and $X$ come from an analytic back-trace of the hyperbola (`isnhe/kepler.py`): the eccentricity vector, the true anomaly, and the velocity on the incoming asymptote at $\nu = -\arccos(-1/e)$.
+
+3. **Moments.** Densities and fluxes are midpoint-rule integrals on a grid of directions $\times$ speeds. The density (in the solar frame) is
+
+   $$
+   n = \int f\, d^3v ,
+   $$
+
+   and the flux (over arrival directions, in the frame of an observer on a circular $1\ \mathrm{au}$ orbit moving at $29.78\ \mathrm{km\,s^{-1}}$) is
+
+   $$
+   F = \int f\, v_\mathrm{rel}^3\, dv_\mathrm{rel}\, d\Omega .
+   $$
+
+   Each grid cell is stored once with its $X$ and swept angle (`VelocitySamples`). Rescaling to any $\beta_0$ (via $\exp(-\beta_0 X)$), any density (linear) or any energy threshold therefore needs no recomputation.
+
 4. **Observables.**
    - Sky-integrated beam fluxes, flux-weighted energies, beam centroids and widths, and scan circles for a Sun-pointing spinner with an arbitrary boresight (pivot) angle.
    - Poisson counting statistics with the Baker & Cousins (1984) likelihood, as used by Antonik et al. (2025).
-   - Average extinction factor: $$\langle X \rangle = -\frac{d \ln F}{d\beta_0}$$
+   - The average exposure of each beam,
+
+     $$
+     \langle X \rangle = -\frac{d \ln F}{d\beta_0} .
+     $$
 
 ## Limitations and next steps
 
