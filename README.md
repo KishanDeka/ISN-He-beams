@@ -94,23 +94,23 @@ PNG and PDF versions are in `figures/`.
 
 2. **Liouville mapping.** At every point the distribution function is
 
-   $$
+   \[
    f(\mathbf{r}, \mathbf{v}) = f_\mathrm{LISM}(\mathbf{v}_\infty)\, \exp(-\beta_0 X).
-   $$
+   \]
 
    Here $\mathbf{v}_\infty$ and $X$ come from an analytic back-trace of the hyperbola (`isnhe/kepler.py`): the eccentricity vector, the true anomaly, and the velocity on the incoming asymptote at $\nu = -\arccos(-1/e)$.
 
 3. **Moments.** Densities and fluxes are midpoint-rule integrals on a grid of directions $\times$ speeds. The density (in the solar frame) is
 
-   $$
+   \[
    n = \int f\, d^3v ,
-   $$
+   \]
 
    and the flux (over arrival directions, in the frame of an observer on a circular $1\ \mathrm{au}$ orbit moving at $29.78\ \mathrm{km\,s^{-1}}$) is
 
-   $$
+   \[
    F = \int f\, v_\mathrm{rel}^3\, dv_\mathrm{rel}\, d\Omega .
-   $$
+   \]
 
    Each grid cell is stored once with its $X$ and swept angle (`VelocitySamples`). Rescaling to any $\beta_0$ (via $\exp(-\beta_0 X)$), any density (linear) or any energy threshold therefore needs no recomputation.
 
@@ -119,9 +119,9 @@ PNG and PDF versions are in `figures/`.
    - Poisson counting statistics with the Baker & Cousins (1984) likelihood, as used by Antonik et al. (2025).
    - The average exposure of each beam,
 
-     $$
+     \[
      \langle X \rangle = -\frac{d \ln F}{d\beta_0} .
-     $$
+     \]
 
 ## Limitations and next steps
 
