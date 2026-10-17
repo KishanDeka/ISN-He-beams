@@ -1,8 +1,9 @@
 """Back-tracing of hyperbolic Keplerian trajectories to infinity.
 
-For helium the solar radiation pressure is negligible, so ISN He atoms move on
-Keplerian hyperbolae under solar gravity alone. For a phase-space point (r, v)
-we need
+ISN He atoms are assumed to move on Keplerian hyperbolae under solar gravity
+alone. Solar radiation pressure on He is small, but it is not negligible for
+the indirect beam (Kowalska-Leszczynska et al. 2023, ApJ 950, 98); it is
+neglected here. For a phase-space point (r, v) we need
 
 1. the velocity the atom had at infinity, ``v_inf`` (to evaluate the
    interstellar distribution function via Liouville's theorem), and
