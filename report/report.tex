@@ -1,0 +1,582 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[round,authoryear]{natbib}
+\usepackage[colorlinks=true,
+            linkcolor=blue!50!black,
+            citecolor=blue!50!black,
+            urlcolor=blue!50!black]{hyperref}
+
+\graphicspath{{../figures/}}
+\sisetup{per-mode=power, separate-uncertainty=true}
+
+\newcommand{\Fdir}{F_\mathrm{dir}}
+\newcommand{\Find}{F_\mathrm{ind}}
+\newcommand{\nisn}{n_\mathrm{ISN}}
+\newcommand{\au}{\mathrm{au}}
+
+\title{}
+\author{Kishan Deka}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Interstellar neutral (ISN) helium reaches 1\,au on two families of Keplerian
+orbits: a \emph{direct} beam and an \emph{indirect} beam that wraps around the
+Sun before arriving. Because indirect atoms spend longer close to the Sun, the
+ratio of the two beam fluxes depends on the ionization rate but not on the
+interstellar density or on the absolute detection efficiency. I implement an
+analytic hot model of ISN He at 1\,au and use it to predict both beams over
+the year as seen by a Sun-pointing spinning detector such as IBEX-Lo or
+IMAP-Lo. For a reference ionization rate
+$\beta_0 = \SI{1.0e-7}{\per\second}$ at 1\,au, a 43\% higher rate (as
+suggested by New Horizons/SWAP pickup ions) lowers the ratio of the late-October
+indirect beam to the February direct beam by a factor of 0.61, while a 43\%
+higher density leaves it unchanged. This report describes the model, the
+assumed observing conditions and the resulting figures, and lists the physics
+and instrument effects that still need to be included.
+\end{abstract}
+
+% ------------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+
+The Sun moves through the partially ionized local interstellar medium, and its
+neutral component flows freely into the heliosphere. Helium is the best-studied
+ISN species: it has a high ionization potential, it is only weakly filtered at
+the heliospheric boundary, and it is too heavy for radiation pressure to matter
+much, so its trajectories are close to Keplerian hyperbolae. The flow was
+measured directly by the GAS instrument on Ulysses \citep{Witte2004} and, since
+2009, by IBEX-Lo on the Interstellar Boundary Explorer
+\citep{McComas2009,Fuselier2009,Mobius2009}. Analyses of the IBEX-Lo data
+\citep{Bzowski2012,Lee2012} led to a consensus set of inflow parameters
+(speed, direction and temperature; \citealt{McComas2015}). IBEX also revealed a
+slower, warmer secondary population, the ``Warm Breeze'' \citep{Kubiak2014}.
+
+The main loss process for ISN He inside the heliosphere is ionization, mostly
+by solar EUV photons with a contribution from electron impact
+\citep{Sokol2019}. The ionization rate controls how much helium survives to
+1\,au and therefore enters every interpretation of the data. There are now two
+independent hints that the rate is higher than solar-proxy models predict.
+\citet{Swaczyna2022} found that the evolution of the ISN He flux seen by IBEX-Lo
+over a solar cycle requires either a change in detection efficiency, a higher
+ionization rate, or an additional signal source. \citet{Antonik2025} derived
+the ionization rate from He$^+$ pickup ions measured by New Horizons/SWAP and
+found it to be $\approx$43\% higher than the model rates.
+
+The difficulty is that neither measurement can separate the ionization rate
+from the interstellar density on its own. Pickup-ion production scales as
+$\nisn\,\beta$, and the direct-beam flux at IBEX-Lo scales as
+$\nisn\,\varepsilon\,\exp(-\beta_0\langle X\rangle)$, where $\varepsilon$ is the
+poorly known absolute efficiency and $\langle X\rangle$ is an exposure factor
+defined below. ``More ionization'', ``more helium'' and ``a different
+efficiency'' are therefore partly degenerate. \citet{Swaczyna2025} adopt an ISN
+He density of $\approx\SI{0.01}{\per\cubic\centi\metre}$ at 1\,au during solar
+minimum, which is one of the comparison points used below.
+
+\citet{Bzowski2023} proposed a calibration-free way to measure the ionization
+rate: compare the fluxes of the direct and indirect beams. Atoms on indirect
+orbits pass around the Sun before reaching 1\,au and accumulate more ionization
+exposure, so the flux ratio depends on $\beta_0$ while the density and the
+absolute efficiency cancel. An earlier attempt with Ulysses data, summarized by
+\citet{Bzowski2023}, was limited because the indirect beam could not be
+separated from the background. The pivot platform of IMAP-Lo on the
+Interstellar Mapping and Acceleration Probe \citep{McComas2018} makes the
+indirect beam observable, and \citet{Kubiak2023} designed a pivot-angle
+schedule that includes calibration-free determination of the He and Ne
+ionization rates.
+
+This project is a lightweight, independent implementation of the
+direct/indirect-beam idea. It asks a narrow question: if the SWAP result is
+correct, how large is the change in the beam ratio, and does the ratio really
+distinguish a higher ionization rate from a higher density?
+
+% ------------------------------------------------------------------------
+\section{Methodology}
+\label{sec:model}
+
+\subsection{Interstellar gas at infinity}
+
+Far from the Sun the ISN He is a drifting Maxwellian,
+\begin{equation}
+  f_\mathrm{LISM}(\mathbf{v}) = \frac{\nisn}{\pi^{3/2} v_\mathrm{th}^3}
+  \exp\!\left(-\frac{|\mathbf{v}-\mathbf{u}|^2}{v_\mathrm{th}^2}\right),
+  \qquad v_\mathrm{th} = \sqrt{2k_BT/m_\mathrm{He}},
+\end{equation}
+with the IBEX consensus parameters of \citet{McComas2015}: inflow speed
+$u = \SI{25.4}{\kilo\metre\per\second}$, upwind ecliptic longitude
+$\lambda = \ang{255.7}$, latitude $\beta = \ang{5.1}$ and temperature
+$T = \SI{7500}{\kelvin}$ ($v_\mathrm{th}\approx\SI{5.6}{\kilo\metre\per\second}$).
+The density at infinity is $\nisn = \SI{0.015}{\per\cubic\centi\metre}$.
+
+\subsection{Keplerian orbits and the two beams}
+
+Radiation pressure is neglected, so each atom moves on a hyperbola under solar
+gravity alone (see Section~\ref{sec:limits} for the consequences). For a
+phase-space point $(\mathbf{r},\mathbf{v})$ the orbit is fixed by the specific
+energy $E = v^2/2 - GM_\odot/r > 0$ and the specific angular momentum
+$h = |\mathbf{r}\times\mathbf{v}|$. The eccentricity is
+$e = \sqrt{1 + 2Eh^2/(GM_\odot)^2}$ and the incoming asymptote lies at true
+anomaly $-\nu_\infty$ with $\nu_\infty = \arccos(-1/e)$. The angle the atom has
+swept since infinity is $\Delta\nu = \nu + \nu_\infty$, where $\nu$ is its
+current true anomaly. Two hyperbolae with the same speed at infinity pass
+through every point near the Sun:
+\begin{itemize}
+  \item the \emph{direct} orbit, with $\Delta\nu < \ang{180}$;
+  \item the \emph{indirect} orbit, which passes around the Sun first and has
+        $\Delta\nu > \ang{180}$.
+\end{itemize}
+The speed at infinity is $v_\infty = \sqrt{2E}$, and its direction follows from
+rotating the position along the orbit back to the asymptote. All of this is
+done analytically, without integrating the equations of motion.
+
+\subsection{Ionization exposure}
+
+The ionization rate is assumed to fall off as
+$\beta(r) = \beta_0\,(r_0/r)^2$ with $r_0 = 1\,\au$. Along a Keplerian orbit
+the true anomaly changes as $\mathrm{d}\nu/\mathrm{d}t = h/r^2$, so the
+integrated loss has a closed form:
+\begin{equation}
+  \int_{-\infty}^{t} \beta\,\mathrm{d}t'
+  = \beta_0 r_0^2 \int \frac{\mathrm{d}t'}{r^2}
+  = \beta_0\,\frac{r_0^2\,\Delta\nu}{h} \equiv \beta_0 X .
+  \label{eq:exposure}
+\end{equation}
+The survival probability of an atom is $\exp(-\beta_0 X)$. Indirect atoms have
+both a larger $\Delta\nu$ and, typically, a smaller $h$, so their exposure $X$
+is several times larger than that of direct atoms reaching the same point.
+Equation~(\ref{eq:exposure}) is exact for a pure $r^{-2}$ rate on a Keplerian
+orbit, and the test suite checks it against numerical orbit integration.
+
+\subsection{Distribution function and moments}
+
+By Liouville's theorem the distribution function is conserved along orbits,
+apart from the ionization losses, so at any point inside the heliosphere
+\begin{equation}
+  f(\mathbf{r},\mathbf{v}) =
+  f_\mathrm{LISM}\big(\mathbf{v}_\infty(\mathbf{r},\mathbf{v})\big)\,
+  \exp\!\big(-\beta_0 X(\mathbf{r},\mathbf{v})\big).
+\end{equation}
+This is the classical ``hot model'' of interstellar gas in the heliosphere
+\citep{Thomas1978,Lee2012}. The density is $n = \int f\,\mathrm{d}^3v$. For an
+observer moving with velocity $\mathbf{v}_\mathrm{obs}$, an atom arriving from
+direction $\hat{\mathbf{d}}$ with speed $s$ relative to the observer has
+heliocentric velocity $\mathbf{v} = \mathbf{v}_\mathrm{obs} - s\hat{\mathbf{d}}$,
+and the sky-integrated number flux is
+\begin{equation}
+  F = \int\!\!\int f(\mathbf{r},\mathbf{v}_\mathrm{obs}-s\hat{\mathbf{d}})\,
+      s^3\,\mathrm{d}s\,\mathrm{d}\Omega .
+\end{equation}
+Restricting the integral to $\Delta\nu<\ang{180}$ or $\Delta\nu>\ang{180}$ gives
+$\Fdir$ and $\Find$.
+
+The integrals are evaluated with the midpoint rule on a grid of arrival
+directions (\ang{2} pixels) times speeds (\SI{1}{\kilo\metre\per\second} steps up
+to \SI{120}{\kilo\metre\per\second}); the sky maps use a \ang{1} and
+\SI{0.5}{\kilo\metre\per\second} grid. Cells with
+$|\mathbf{v}_\infty-\mathbf{u}|^2/v_\mathrm{th}^2 > 30$ are dropped. Each
+remaining cell is stored once together with its $X$, $\Delta\nu$ and energy, so
+any $\beta_0$, density or energy threshold can be applied afterwards without
+recomputing the orbits. Halving and quartering the grid step changes the beam
+fluxes by less than $10^{-4}$ in most seasons and by about $10^{-3}$ where the
+beams overlap.
+
+\subsection{Why the ratio measures the ionization rate}
+
+Each beam is a sum of exponentials in $\beta_0$, so its flux-weighted mean
+exposure is
+\begin{equation}
+  \langle X\rangle = -\frac{\mathrm{d}\ln F}{\mathrm{d}\beta_0}.
+\end{equation}
+To first order in $\beta_0$,
+\begin{equation}
+  \ln\frac{\Find}{\Fdir} = \mathrm{const}
+     - \beta_0\big(\langle X\rangle_\mathrm{ind}-\langle X\rangle_\mathrm{dir}\big).
+  \label{eq:ratio}
+\end{equation}
+Both fluxes are proportional to $\nisn$ and, for the same instrument, to the
+efficiency $\varepsilon$, so both cancel in the ratio. A change of $\beta_0$
+moves the ratio, while a change of $\nisn$ does not. The cancellation of
+$\varepsilon$ is exact only if the efficiency is the same for both beams; for
+beams arriving at different energies an energy-dependent efficiency leaves a
+residual (Section~\ref{sec:limits}).
+
+% ------------------------------------------------------------------------
+\section{Instrumentation}
+\label{sec:obs}
+
+\paragraph{Observation.} The observer is on a circular orbit at 1\,au in the
+ecliptic plane, moving prograde at \SI{29.78}{\kilo\metre\per\second}. Its
+position is given by its ecliptic longitude; the conversion to calendar date
+uses a low-precision solar ephemeris (Earth at \ang{30} in late October,
+\ang{130} in early February). The annual tables are computed every \ang{2.5}
+of longitude, and on a grid of $\beta_0$ from 0 to
+\SI{3e-7}{\per\second} in steps of \SI{5e-9}{\per\second}, with
+interpolation in $\ln F$ between grid points.
+
+\paragraph{Detector geometry.} IBEX is a Sun-pointing spinning spacecraft, and
+IBEX-Lo looks perpendicular to the spin axis, so in each orbit it samples a
+great circle \ang{90} from the Sun \citep{McComas2009,Fuselier2009}. This
+geometry sees the direct He beam well around February, which is where most
+IBEX ISN He analyses come from \citep{Mobius2009,Bzowski2012}. IMAP-Lo is
+mounted on a pivot platform that changes the angle between the boresight and
+the spin axis \citep{McComas2018}, so it can scan circles of other radii around
+the Sun, including ones that cross the indirect beam \citep{Kubiak2023}. In the
+model a ``scan circle'' is the set of directions at a given angle from the Sun
+direction, and the angle needed to see a beam is the angle between its
+flux-weighted centroid and the Sun.
+
+\paragraph{Detection.} IBEX-Lo and IMAP-Lo detect He indirectly, through
+negative ions sputtered from a conversion surface, so the efficiency depends
+on energy and falls off at low energy. The model mostly uses sky-integrated
+fluxes without an instrument response. The energy dependence is represented
+only by a sharp lower threshold of 0, 20 or \SI{40}{\electronvolt} in the
+observer frame.
+
+\paragraph{Reference observations.} The direct beam is taken at its February
+peak (Earth at \ang{130}), where IBEX-Lo has measured it for over a decade. The
+indirect beam is taken in late October (Earth at \ang{30}), where it is bright,
+well separated from the direct beam and about \ang{59} from the Sun. The two
+competing explanations of the SWAP result are
+\begin{itemize}
+  \item \textbf{H1}: the ionization rate is $1.43\times$ the model value,
+        $\beta_0 = \SI{1.43e-7}{\per\second}$, at fixed density;
+  \item \textbf{H2}: the density is $1.43\times$ higher at the model rate
+        $\beta_0 = \SI{1.0e-7}{\per\second}$, giving the same pickup-ion
+        production $\nisn\beta$.
+\end{itemize}
+
+% ------------------------------------------------------------------------
+\section{Results}
+\label{sec:results}
+
+Table~\ref{tab:summary} collects the main numbers. The figures are described
+below in order.
+
+\begin{table}[ht]
+  \centering
+  \caption{Summary for $\beta_0 = \SI{1.0e-7}{\per\second}$, direct beam at
+  Earth longitude \ang{130} (February) and indirect beam at \ang{30} (late
+  October).}
+  \label{tab:summary}
+  \begin{tabular}{lcc}
+    \toprule
+    & Direct (Feb.) & Indirect (late Oct.) \\
+    \midrule
+    Sky-integrated flux (\si{\per\square\centi\metre\per\second})
+      & \num{9.2e4} & \num{1.1e4} \\
+    Mean energy, observer frame (eV) & 129 & 106 \\
+    $\langle X\rangle$ (\SI{e7}{\second}) & 0.67 & 1.83 \\
+    Beam centre (ecliptic lon, lat) & (\ang{220}, \ang{3.9}) & (\ang{151}, \ang{-3.1}) \\
+    RMS beam width & \ang{8.1} & \ang{7.2} \\
+    Angle from the Sun & \ang{90} & \ang{59} \\
+    \midrule
+    Flux change for H1 ($\beta_0\times1.43$) & 0.75 & 0.46 \\
+    Flux change for H2 ($\nisn\times1.43$)  & 1.43 & 1.43 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{fig1_trajectories.pdf}
+  \caption{Cold-model ($T=0$) sketch of the direct (blue) and indirect (orange)
+  orbits reaching Earth in late October (a) and early February (b), in the
+  plane of the inflow. Grey lines are other orbits of the cold flow, the dotted
+  circle is Earth's orbit, and the gas arrives from the right. The swept angle
+  $\Delta\nu$ of each orbit is given in the legend.}
+  \label{fig:traj}
+\end{figure}
+
+\paragraph{Trajectories (Figure~\ref{fig:traj}).} For a cold gas the impact
+parameters of the two orbits through a point at distance $r$ and polar angle
+$\psi$ from the upwind axis solve
+$b^2 - r\sin\psi\,b - (GM_\odot r/u^2)(1-\cos\psi) = 0$. In late October the
+direct orbit reaching Earth has swept \ang{134} and the indirect one \ang{226};
+in February the values are \ang{126} and \ang{234}. The indirect orbits pass
+much closer to the Sun, which is why they accumulate more exposure.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig2_density_1au.pdf}
+  \caption{ISN He density along Earth's orbit for several ionization rates
+  (black and grey), and the direct and indirect parts for
+  $\beta_0=\SI{1.0e-7}{\per\second}$ (blue, orange). The green line is the
+  density at infinity, and the square is the solar-minimum value of
+  \citet{Swaczyna2025}.}
+  \label{fig:dens}
+\end{figure}
+
+\paragraph{Density at 1\,au (Figure~\ref{fig:dens}).} This is a consistency
+check of the model. Upwind at 1\,au the density is
+\SI{0.0112}{\per\cubic\centi\metre} for $\beta_0=\SI{1.0e-7}{\per\second}$,
+close to the $\approx\SI{0.01}{\per\cubic\centi\metre}$ of
+\citet{Swaczyna2025}. Without ionization it is
+\SI{0.0185}{\per\cubic\centi\metre}, above the value at infinity because of
+gravitational focusing. Downwind (Earth longitude $\approx\ang{75}$, early
+December) the focusing cone raises the density to
+\SI{0.061}{\per\cubic\centi\metre}, about 40\% of which is indirect atoms.
+Upwind, the indirect contribution is negligible ($<10^{-7}$ of the total).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.85\textwidth]{fig3_skymaps.pdf}
+  \caption{Directional flux in the observer frame (arrival directions,
+  ecliptic coordinates) for Earth at \ang{30} (top) and \ang{130} (bottom).
+  Grey shading is the total flux; blue and orange contours mark 1, 10 and 50\%
+  of the peak of the direct and indirect beams. The dashed curve is the
+  IBEX-Lo scan circle (\ang{90} from the Sun) and the solid curve in the top
+  panel is the pivot angle that crosses the indirect-beam centre.}
+  \label{fig:sky}
+\end{figure}
+
+\paragraph{Sky maps (Figure~\ref{fig:sky}).} In late October the indirect beam
+is a compact spot near ecliptic longitude \ang{151}, about \ang{59} from the
+Sun. It is not crossed by the \ang{90} IBEX-Lo circle, but a \ang{59} pivot
+angle passes through its centre. The direct population in October is a broad,
+slow component that overtakes Earth from behind. In February the direct beam is
+compact and sits on the IBEX-Lo circle at longitude $\approx\ang{220}$, while
+the indirect beam comes from within a few degrees of the Sun and cannot be
+observed.
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=0.85\textwidth]{fig4_annual_beams.pdf}
+  \caption{The two beams over the year versus Earth's ecliptic longitude
+  (calendar months on top). (a) Sky-integrated fluxes for the model rate
+  (solid) and $\beta_0\times1.43$ (dashed). (b) Flux-weighted mean energy in
+  the observer frame. (c) Angle between the beam centre and the Sun. Grey
+  bands mark where the beam centres are closer than the sum of their RMS
+  widths. The dotted lines mark the reference seasons (\ang{30} and \ang{130}).
+  The indirect beam is not drawn in (b) and (c) where its flux is below 0.1\%
+  of the direct beam's.}
+  \label{fig:annual}
+\end{figure}
+
+\paragraph{The beams over the year (Figure~\ref{fig:annual}).} The direct beam
+is bright all year, peaking at $\approx\SI{2.1e5}{\per\square\centi\metre\per\second}$
+when Earth passes through the focusing cone. The indirect beam is comparable to
+the direct beam from November to December. It becomes negligible
+around the upwind season (May to July), when Earth is far from the region where
+indirect orbits arrive. Between Earth longitudes of about \ang{60} and \ang{90}
+the beams overlap on the sky and cannot be separated. The indirect beam is
+more sensitive to $\beta_0$ throughout. Its energy in autumn is
+\SIrange{100}{110}{\electronvolt}, compared with $\approx\SI{129}{\electronvolt}$
+for the February direct beam. The two reference observations therefore differ
+by about 20\% in energy, so an energy-dependent efficiency cancels only partly
+in their ratio. \citet{Bzowski2023} recommend choosing pairs of observations at
+matched energies for this reason. Panel (c) shows that the indirect beam stays
+\ang{50}--\ang{60} from the Sun in autumn, so it needs a pivot angle smaller
+than \ang{90}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{fig5_exposure_response.pdf}
+  \caption{(a) Flux-weighted mean exposure $\langle X\rangle$ of each beam over
+  the year; grey band as in Figure~\ref{fig:annual}. (b) Response of the
+  February direct-beam flux, the late-October indirect-beam flux and their
+  ratio to H1 ($\beta_0\times1.43$, orange) and H2 ($\nisn\times1.43$,
+  green), relative to the model.}
+  \label{fig:resp}
+\end{figure}
+
+\paragraph{Exposure and response (Figure~\ref{fig:resp}).} The indirect beam
+accumulates 1.5--5 times more exposure than the direct beam observed at the
+same time, with the largest contrast early in autumn: the ratio
+$\langle X\rangle_\mathrm{ind}/\langle X\rangle_\mathrm{dir}$ is 4.7 at Earth
+longitude \ang{0}, 2.6 at \ang{30} and 1.5 at \ang{55}. For the reference pair,
+$\langle X\rangle$ is \SI{0.67e7}{\second} for the February direct beam and
+\SI{1.83e7}{\second} for the October indirect beam. Under H1 the direct beam
+drops to 0.75 and the indirect beam to 0.46 of the model value, so the ratio
+drops to 0.61. Under H2 both beams rise by the same factor of 1.43 and the
+ratio does not change. The absolute direct-beam flux could separate H1 and H2
+only if the absolute efficiency were known to much better than the 25--43\%
+difference between them; the ratio does not need it.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.6\textwidth]{fig6_degeneracy.pdf}
+  \caption{Constraints in the plane of $\beta_0$ and the product
+  $\nisn\,\varepsilon$ (relative to the truth) from noise-free pseudo-data
+  generated under H1 (star). Blue: the February direct beam alone; orange:
+  direct plus late-October indirect beam. Contours are $\Delta\chi^2 = 2.30$,
+  6.18 and 11.8 of the Poisson likelihood of \citet{BakerCousins1984}. The
+  cross marks H2 with $\nisn\varepsilon$ fitted to both beams.}
+  \label{fig:degen}
+\end{figure}
+
+\paragraph{Breaking the degeneracy (Figure~\ref{fig:degen}).} The pseudo-data
+assume $10^4$ counts in the February direct beam, and the October indirect-beam
+counts ($\approx750$) follow from the same exposure time and efficiency. A
+single direct-beam measurement constrains only a curved band in the
+$(\beta_0, \nisn\varepsilon)$ plane: a higher ionization rate can be
+compensated by more helium or a higher efficiency. Adding the indirect beam
+closes the contour around the true point. H2, with its best-fitting
+$\nisn\varepsilon$, lies at $\Delta\chi^2\approx199$ from the truth. This is
+an idealized illustration of how the second beam lifts the degeneracy, not a
+forecast of the achievable precision, which depends on the effects in
+Section~\ref{sec:limits}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig7_energy_threshold.pdf}
+  \caption{Beam fluxes for $\beta_0=\SI{1.0e-7}{\per\second}$ with a sharp
+  energy threshold in the observer frame of 0 (solid), 20 (dashed) and
+  \SI{40}{\electronvolt} (dotted).}
+  \label{fig:emin}
+\end{figure}
+
+\paragraph{Energy threshold (Figure~\ref{fig:emin}).} At Earth longitude
+\ang{30} the indirect beam (mean energy $\approx\SI{106}{\electronvolt}$) is
+unaffected by a threshold of up to \SI{40}{\electronvolt}. The slow direct
+population seen in autumn ($\approx\SIrange{10}{20}{\electronvolt}$) drops from
+\num{2.8e4} to \SI{8.3e2}{\per\square\centi\metre\per\second} for
+$E>\SI{20}{\electronvolt}$, and to $\approx\SI{7}{\per\square\centi\metre\per\second}$ for
+$E>\SI{40}{\electronvolt}$. A realistic low-energy efficiency cut-off therefore
+helps by suppressing the slow direct atoms that share the sky with the indirect
+beam in autumn. The February direct beam is unaffected by these thresholds.
+
+% ------------------------------------------------------------------------
+\section{Limitations and future prospects}
+\label{sec:limits}
+
+The model is a feasibility study of the size of the beam-ratio signal. A full
+analysis of IMAP-Lo data would need several additions, listed roughly in order
+of importance. Some of them are already being worked on.
+
+\begin{enumerate}
+  \item \textbf{Radiation pressure.} The orbits are purely Keplerian.
+  \citet{KowalskaLeszczynska2023} showed that radiation pressure on He changes
+  the IMAP-Lo fluxes by up to $\sim$9\% for the indirect beam, likely more than
+  the statistical uncertainties. Including it breaks the closed form of
+  Equation~(\ref{eq:exposure}); the natural upgrade is numerical orbits with a
+  radiation-pressure factor.
+
+  \item \textbf{Other near-Sun losses.} The beam ratio measures the
+  \emph{total} extra loss of indirect atoms, not photoionization alone. Any
+  process that removes atoms preferentially close to the Sun lowers the ratio
+  in the same way as a higher $\beta_0$. Elastic scattering of ISN He by
+  solar-wind particles has been proposed as an alternative to a $\sim$40\%
+  higher ionization rate \citep{ElasticScattering2024}. Separating the two
+  would rely on their different energy and angular signatures.
+
+  \item \textbf{Secondary helium.} The Warm Breeze \citep{Kubiak2014} arrives
+  from a different direction with its own direct and indirect beams, and its
+  contribution to the autumn indirect beam has to be modelled. The code
+  supports this by computing a second population with different inflow
+  parameters and adding the fluxes.
+
+  \item \textbf{Time-dependent and non-$r^{-2}$ ionization.} Indirect atoms
+  spend months near the Sun, and the two beams are observed months apart, so
+  solar-cycle variations of the ionization rate matter. Electron-impact
+  ionization falls off faster than $r^{-2}$ and is not described by a single
+  $\beta_0$ \citep{Sokol2019}. Both effects break the closed form; a numerical
+  exposure integral along each orbit is the planned upgrade.
+
+  \item \textbf{Instrument response and energy matching.} The model uses
+  sky-integrated fluxes and a sharp energy threshold. It does not include the
+  IMAP-Lo collimator, the pivot schedule of \citet{Kubiak2023}, spin-axis
+  offsets, the energy-dependent sputtering efficiency or the duty cycle.
+  Choosing direct/indirect pairs at matched energies \citep{Bzowski2023} would
+  reduce the efficiency residual.
+
+  \item \textbf{Inflow-parameter systematics and counting statistics.} The
+  uncertainties of the inflow speed, direction and temperature
+  \citep{McComas2015} also move the beam ratio, and the number of counts needed
+  to detect the signal depends on the observing season. A first estimate was
+  removed from this version and is being redone. Because the inflow parameters
+  are correlated and are themselves derived from direct-beam data, the
+  consistent approach is a joint fit of the inflow parameters and $\beta_0$ to
+  both beams.
+
+  \item \textbf{Geometry.} IMAP's position near L1 (0.99\,au), the eccentricity
+  of Earth's orbit and the filtration of He in the outer heliosheath are
+  ignored. These are expected to be small corrections.
+\end{enumerate}
+
+\section*{Code and data}
+
+The model, the scripts that generate the data products and the notebook that
+makes the figures are in the project repository (\texttt{src/isnhe},
+\texttt{scripts/} and \texttt{notebooks/plot\_figures.ipynb}).
+
+% ------------------------------------------------------------------------
+\begin{thebibliography}{99}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Antonik} et~al.(2025)]{Antonik2025}
+Antonik, M., Swaczyna, P., McComas, D.~J., Elliott, H.~A., \& Bzowski, M.
+  2025, ApJ, 995, 57
+
+\bibitem[{Baker} \& {Cousins}(1984)]{BakerCousins1984}
+Baker, S., \& Cousins, R.~D. 1984, Nucl. Instrum. Methods Phys. Res., 221, 437
+
+\bibitem[{Bzowski} et~al.(2012)]{Bzowski2012}
+Bzowski, M., Kubiak, M.~A., M\"obius, E., et~al. 2012, ApJS, 198, 12
+
+\bibitem[{Bzowski} et~al.(2023)]{Bzowski2023}
+Bzowski, M., Kubiak, M.~A., M\"obius, E., \& Schwadron, N.~A. 2023, ApJS,
+  265, 24
+
+\bibitem[{arXiv:2409.11784}(2024)]{ElasticScattering2024}
+\textit{IBEX Observations of Elastic Scattering of Interstellar Helium by
+  Solar Wind Particles}, 2024, arXiv:2409.11784
+
+\bibitem[{Fuselier} et~al.(2009)]{Fuselier2009}
+Fuselier, S.~A., Bochsler, P., Chornay, D., et~al. 2009, SSRv, 146, 117
+
+\bibitem[{Kowalska-Leszczy\'nska} et~al.(2023)]{KowalskaLeszczynska2023}
+Kowalska-Leszczy\'nska, I., Kubiak, M.~A., \& Bzowski, M. 2023, ApJ, 950, 98
+
+\bibitem[{Kubiak} et~al.(2014)]{Kubiak2014}
+Kubiak, M.~A., Bzowski, M., Sok\'o\l, J.~M., et~al. 2014, ApJS, 213, 29
+
+\bibitem[{Kubiak} et~al.(2023)]{Kubiak2023}
+Kubiak, M.~A., Bzowski, M., et~al. 2023, ApJS, \textit{Science Opportunities
+  for IMAP-Lo Observations of Interstellar Neutral Helium, Neon, and Oxygen
+  during a Maximum of Solar Activity}, arXiv:2309.06931
+
+\bibitem[{Lee} et~al.(2012)]{Lee2012}
+Lee, M.~A., Kucharek, H., M\"obius, E., et~al. 2012, ApJS, 198, 10
+
+\bibitem[{McComas} et~al.(2009)]{McComas2009}
+McComas, D.~J., Allegrini, F., Bochsler, P., et~al. 2009, SSRv, 146, 11
+
+\bibitem[{McComas} et~al.(2015)]{McComas2015}
+McComas, D.~J., Bzowski, M., Fuselier, S.~A., et~al. 2015, ApJS, 220, 22
+
+\bibitem[{McComas} et~al.(2018)]{McComas2018}
+McComas, D.~J., Christian, E.~R., Schwadron, N.~A., et~al. 2018, SSRv, 214,
+  116
+
+\bibitem[{M\"obius} et~al.(2009)]{Mobius2009}
+M\"obius, E., Bochsler, P., Bzowski, M., et~al. 2009, Science, 326, 969
+
+\bibitem[{Sok\'o\l} et~al.(2019)]{Sokol2019}
+Sok\'o\l, J.~M., Bzowski, M., \& Tokumaru, M. 2019, ApJ, 872, 57
+
+\bibitem[{Swaczyna} et~al.(2022)]{Swaczyna2022}
+Swaczyna, P., Kubiak, M.~A., Bzowski, M., et~al. 2022, ApJS, 259, 42
+
+\bibitem[{Swaczyna} et~al.(2025)]{Swaczyna2025}
+Swaczyna, P., Bzowski, M., \& Kubiak, M.~A. 2025, ApJS, 277, 17
+
+\bibitem[{Thomas}(1978)]{Thomas1978}
+Thomas, G.~E. 1978, Annu. Rev. Earth Planet. Sci., 6, 173
+
+\bibitem[{Witte}(2004)]{Witte2004}
+Witte, M. 2004, A\&A, 426, 835
+
+\end{thebibliography}
+
+\end{document}
