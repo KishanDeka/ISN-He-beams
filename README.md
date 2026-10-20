@@ -4,6 +4,8 @@ A small side project: an analytic hot model of interstellar neutral (ISN) helium
 
 Motivation: New Horizons/SWAP pickup ions suggest the He ionization rate is ~43% higher than models (Antonik et al. 2025). But pickup ions and the direct-beam flux both scale with density × survival, so they can't separate the two on their own. Bzowski et al. (2023) proposed comparing the direct and indirect beams instead, and this repo is my attempt at a quick implementation of that idea.
 
+For more details on the physics and the figures, see the [report (PDF)](report/report.pdf).
+
 ## Idea
 
 Atoms move on Keplerian hyperbolae under solar gravity (radiation pressure is ignored for now). Two orbits reach every point near the Sun:
@@ -47,7 +49,7 @@ So a 43% higher ionization rate drops the ratio by ~40%, while more helium doesn
 
 ### Figures
 
-PNG and PDF versions are in `figures/`.
+PNG and PDF versions are in `figures/`. Full descriptions are in the [report](report/report.pdf).
 
 1. **Trajectories:** cold-gas (T = 0) sketch of the direct and indirect orbits that hit Earth in October and February.
 2. **Density at 1 au:** He density along Earth's orbit for a few β₀ values, split into direct and indirect atoms. A sanity check: the upwind value is ~0.011 cm⁻³ (Swaczyna et al. 2025 use ~0.01), and the downwind peak is the gravitational focusing cone.
@@ -55,7 +57,6 @@ PNG and PDF versions are in `figures/`.
 4. **Over the year:** beam fluxes, mean energies and angle from the Sun vs Earth's longitude. Grey bands mark where the two beams overlap.
 5. **Exposure and response:** ⟨X⟩ for each beam, and how F_dir, F_ind and their ratio respond to H1 and H2.
 6. **Degeneracy:** fit of (n·ε, β₀) to noise-free fake data from H1. The direct beam alone gives a degenerate band; adding the indirect beam closes the contour.
-7. **Energy threshold:** a step cut-off in energy (a stand-in for the real IMAP-Lo efficiency). The ~100 eV indirect beam barely changes, but the slow (~10–20 eV) direct atoms seen in autumn are removed.
 
 ## Not included (yet)
 
@@ -65,6 +66,10 @@ PNG and PDF versions are in `figures/`.
 - time-dependent and non-r⁻² ionization (e.g. electron impact). The two beams are observed months apart, so this matters.
 - instrument response (collimator, pivot schedule, efficiency vs energy)
 - systematics from the inflow parameters and the required counting statistics
+
+## Report
+
+A longer write-up of the physics and the figures is in [report/report.pdf](report/report.pdf) (source: `report/report.tex`, build with `bash report/run.sh`).
 
 ## Running it
 
