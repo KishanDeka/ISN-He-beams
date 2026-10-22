@@ -80,6 +80,8 @@ bash scripts/run_all.sh        # makes data/
 jupyter nbconvert --to notebook --execute --inplace notebooks/plot_figures.ipynb
 ```
 
+The code is explained, with the physics behind each part, in [src/README.md](src/README.md) (the model) and [scripts/README.md](scripts/README.md) (the data-generation scripts).
+
 Quick example:
 
 ```python
