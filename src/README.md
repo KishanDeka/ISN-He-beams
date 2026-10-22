@@ -1,6 +1,6 @@
 # `isnhe`: the model code
 
-This folder holds the Python package `isnhe`, a small "hot model" of interstellar neutral (ISN) helium near the Sun. Given the state of the gas far from the Sun, it computes the He density and the He flux an observer at 1 au would see, split into the **direct** and **indirect** beams.
+This folder holds the Python package `isnhe`, a small "hot model" of interstellar neutral (ISN) helium near the Sun. Given the state of the gas far from the Sun, it computes the He density and the He flux an observer at $1\,\mathrm{au}$ would see, split into the **direct** and **indirect** beams.
 
 The package has five modules, each building on the previous ones:
 
@@ -10,7 +10,7 @@ The package has five modules, each building on the previous ones:
 | [`lism.py`](isnhe/lism.py) | the gas far from the Sun (a drifting Maxwellian) |
 | [`kepler.py`](isnhe/kepler.py) | traces an orbit back to infinity and computes the ionization exposure |
 | [`hotmodel.py`](isnhe/hotmodel.py) | integrates over velocity space to get densities, fluxes and sky maps |
-| [`observables.py`](isnhe/observables.py) | quantities over the year, interpolation in β₀, scan circles, statistics |
+| [`observables.py`](isnhe/observables.py) | quantities over the year, interpolation in $\beta_0$, scan circles, statistics |
 
 [`__init__.py`](isnhe/__init__.py) re-exports the commonly used names, so `from isnhe import flux_samples` works.
 
@@ -27,15 +27,15 @@ The big picture is:
 
 All internal quantities use:
 
-- distances in **km**, velocities in **km/s**, time in **s**
-- ionization rates in **s⁻¹**
-- phase-space density $f$ in **cm⁻³ (km/s)⁻³**, so that $\int f\,d^3v$ comes out in cm⁻³
+- distances in $\mathrm{km}$, velocities in $\mathrm{km\,s^{-1}}$, time in $\mathrm{s}$
+- ionization rates in $\mathrm{s^{-1}}$
+- phase-space density $f$ in $\mathrm{cm^{-3}\,(km/s)^{-3}}$, so that $\int f\,d^3v$ comes out in $\mathrm{cm^{-3}}$
 
-Directions are in the **heliocentric ecliptic frame**: $x$ points to ecliptic longitude 0° (the vernal equinox), $z$ to the north ecliptic pole. A direction with longitude $\lambda$ and latitude $b$ is the unit vector
+Directions are in the **heliocentric ecliptic frame**: $x$ points to ecliptic longitude $0^{\circ}$ (the vernal equinox), $z$ to the north ecliptic pole. A direction with longitude $\lambda$ and latitude $b$ is the unit vector
 
 $$\hat{\mathbf{n}} = (\cos b\cos\lambda,\ \cos b\sin\lambda,\ \sin b).$$
 
-Earth (the observer) at ecliptic longitude $\lambda_E$ sees the Sun at $\lambda_E + 180°$.
+Earth (the observer) at ecliptic longitude $\lambda_E$ sees the Sun at $\lambda_E + 180^{\circ}$.
 
 ---
 
@@ -43,14 +43,14 @@ Earth (the observer) at ecliptic longitude $\lambda_E$ sees the Sun at $\lambda_
 
 | Name | Value | Meaning |
 |---|---|---|
-| `GM_SUN` | 1.327×10¹¹ km³ s⁻² | solar gravitational parameter $\mu = GM_\odot$ |
-| `AU_KM` | 1.496×10⁸ km | astronomical unit |
-| `KB` | 1.381×10⁻²³ J/K | Boltzmann constant |
-| `AMU`, `M_HE` | | atomic mass unit, He-4 mass (4.0026 amu) |
-| `EV` | 1.602×10⁻¹⁹ J | electronvolt, for converting kinetic energy |
-| `V_EARTH` | 29.78 km/s | mean orbital speed of Earth (circular orbit) |
-| `KM_TO_CM` | 10⁵ | converts the flux integral from cm⁻³ km/s to cm⁻² s⁻¹ |
-| `R0_KM` | 1 au | reference distance for the ionization rate, $\beta(r) = \beta_0 (R_0/r)^2$ |
+| `GM_SUN` | $1.327\times10^{11}\,\mathrm{km^3\,s^{-2}}$ | solar gravitational parameter $\mu = GM_\odot$ |
+| `AU_KM` | $1.496\times10^{8}\,\mathrm{km}$ | astronomical unit |
+| `KB` | $1.381\times10^{-23}\,\mathrm{J\,K^{-1}}$ | Boltzmann constant |
+| `AMU`, `M_HE` | | atomic mass unit, He-4 mass ($4.0026\,\mathrm{amu}$) |
+| `EV` | $1.602\times10^{-19}\,\mathrm{J}$ | electronvolt, for converting kinetic energy |
+| `V_EARTH` | $29.78\,\mathrm{km\,s^{-1}}$ | mean orbital speed of Earth (circular orbit) |
+| `KM_TO_CM` | $10^{5}$ | converts the flux integral from $\mathrm{cm^{-3}\,km\,s^{-1}}$ to $\mathrm{cm^{-2}\,s^{-1}}$ |
+| `R0_KM` | $1\,\mathrm{au}$ | reference distance for the ionization rate, $\beta(r) = \beta_0 (R_0/r)^2$ |
 
 ---
 
@@ -68,14 +68,14 @@ A frozen dataclass with the five numbers describing the gas at infinity. The def
 
 | Field | Default | Meaning |
 |---|---|---|
-| `density` | 0.015 cm⁻³ | He number density at infinity, $n_\mathrm{ISN}$ |
-| `speed` | 25.4 km/s | bulk inflow speed $u$ |
-| `lon`, `lat` | 255.7°, 5.1° | ecliptic direction the gas comes **from** (upwind) |
-| `temperature` | 7500 K | gas temperature $T$ |
+| `density` | $0.015\,\mathrm{cm^{-3}}$ | He number density at infinity, $n_\mathrm{ISN}$ |
+| `speed` | $25.4\,\mathrm{km\,s^{-1}}$ | bulk inflow speed $u$ |
+| `lon`, `lat` | $255.7^{\circ}$, $5.1^{\circ}$ | ecliptic direction the gas comes **from** (upwind) |
+| `temperature` | $7500\,\mathrm{K}$ | gas temperature $T$ |
 
 Derived properties:
 
-- `thermal_speed`: the most probable thermal speed $v_\mathrm{th} = \sqrt{2k_BT/m_\mathrm{He}}$, about 5.6 km/s for 7500 K. This is the width of the Maxwellian.
+- `thermal_speed`: the most probable thermal speed $v_\mathrm{th} = \sqrt{2k_BT/m_\mathrm{He}}$, about $5.6\,\mathrm{km\,s^{-1}}$ for $7500\,\mathrm{K}$. This is the width of the Maxwellian.
 - `upwind_unit`: unit vector towards the upwind direction.
 - `bulk_velocity`: $\mathbf{u} = -u\,\hat{\mathbf{n}}_\mathrm{upwind}$. The minus sign is there because the gas comes *from* upwind, so it moves *towards* downwind.
 - `with_(**kw)` returns a copy with some fields changed, and `to_dict()` is used to store the parameters in the data files.
@@ -116,7 +116,7 @@ $$\mathbf{e} = \frac{\mathbf{v}\times\mathbf{h}}{\mu} - \frac{\mathbf{r}}{r}, \q
 $\mathbf{e}$ points to perihelion. Together with $\mathbf{h}$ it defines a frame in the orbital plane:
 
 - $\hat{\mathbf{p}} = \mathbf{e}/e$, pointing to perihelion,
-- $\hat{\mathbf{q}} = \hat{\mathbf{h}}\times\hat{\mathbf{p}}$, 90° ahead in the direction of motion.
+- $\hat{\mathbf{q}} = \hat{\mathbf{h}}\times\hat{\mathbf{p}}$, $90^{\circ}$ ahead in the direction of motion.
 
 **3. True anomaly.** The angle from perihelion to the current position is
 
@@ -157,8 +157,8 @@ The function returns `unbound`, `v_inf_vec`, `swept`, `X`, `e` and `h`.
 
 Returns `swept < pi`. Two hyperbolae with the same speed at infinity pass through every point near the Sun:
 
-- the **direct** one has swept less than 180° since infinity,
-- the **indirect** one has gone around the Sun first, so it has swept more than 180°.
+- the **direct** one has swept less than $180^{\circ}$ since infinity,
+- the **indirect** one has gone around the Sun first, so it has swept more than $180^{\circ}$.
 
 Indirect atoms pass closer to the Sun (small $h$) and have a larger $\Delta\nu$, so their $X$ is several times larger. That difference is the whole basis of the beam-ratio method.
 
@@ -174,7 +174,7 @@ This is the classical "hot model": hot because the gas has a finite temperature,
 
 ### `SkyGrid(dang)`
 
-A regular longitude × latitude grid with pixel size `dang` in degrees, covering the whole sky.
+A regular longitude $\times$ latitude grid with pixel size `dang` in degrees, covering the whole sky.
 
 - `lon_edges`, `lat_edges`, `lon`, `lat`: pixel edges and centres.
 - `pixel_solid_angle()`: the exact solid angle of each pixel, $\Delta\Omega = \Delta\lambda\,(\sin b_2 - \sin b_1)$. Pixels near the poles are smaller, and this accounts for it.
@@ -188,7 +188,7 @@ Position and velocity of an observer on a circular, prograde orbit in the eclipt
 
 $$\mathbf{r} = r(\cos\lambda, \sin\lambda, 0), \qquad \mathbf{v}_\mathrm{obs} = v_\mathrm{orb}(-\sin\lambda, \cos\lambda, 0).$$
 
-This stands in for Earth, IBEX or IMAP; IMAP's real position at L1 and the eccentricity of Earth's orbit are ignored. Earth's 29.78 km/s motion matters a lot: it is comparable to the gas speed, so it shifts where the beams appear on the sky and what energies they arrive with.
+This stands in for Earth, IBEX or IMAP; IMAP's real position at L1 and the eccentricity of Earth's orbit are ignored. Earth's $29.78\,\mathrm{km\,s^{-1}}$ motion matters a lot: it is comparable to the gas speed, so it shifts where the beams appear on the sky and what energies they arrive with.
 
 ### `_sample_velocity_space(...)`, the integration engine
 
@@ -211,17 +211,17 @@ Sets up the integral for the **flux seen by a moving observer**. An atom arrivin
 
 $$\mathbf{v} = \mathbf{v}_\mathrm{obs} - s\,\hat{\mathbf{d}}$$
 
-(sign −1 and origin $\mathbf{v}_\mathrm{obs}$). The number of atoms crossing a unit area per unit time is $\int f\,|\mathbf{v}_\mathrm{rel}|\,d^3v_\mathrm{rel}$, and with $d^3v_\mathrm{rel} = s^2\,ds\,d\Omega$ that becomes
+(sign $-1$ and origin $\mathbf{v}_\mathrm{obs}$). The number of atoms crossing a unit area per unit time is $\int f\,|\mathbf{v}_\mathrm{rel}|\,d^3v_\mathrm{rel}$, and with $d^3v_\mathrm{rel} = s^2\,ds\,d\Omega$ that becomes
 
 $$F = \int\!\!\int f\,s^3\,ds\,d\Omega \qquad (\text{power} = 3).$$
 
-The weights then have units cm⁻³ (km/s)⁻³ × (km/s)⁴ = cm⁻³ km/s. Multiplying by `KM_TO_CM` converts them to cm⁻² s⁻¹. Here $\hat{\mathbf{d}}$ is the **look direction** (where the detector points), so the samples can be binned straight into sky maps.
+The weights then have units $\mathrm{cm^{-3}\,(km/s)^{-3}} \times \mathrm{(km/s)^{4}} = \mathrm{cm^{-3}\,km\,s^{-1}}$. Multiplying by `KM_TO_CM` converts them to $\mathrm{cm^{-2}\,s^{-1}}$. Here $\hat{\mathbf{d}}$ is the **look direction** (where the detector points), so the samples can be binned straight into sky maps.
 
-Defaults: 1° pixels, 0.5 km/s steps, speeds up to 120 km/s. The fastest beam (the February direct beam, about 130 eV) arrives at about 80 km/s relative to Earth, so 120 km/s comfortably covers the distribution.
+Defaults: $1^{\circ}$ pixels, $0.5\,\mathrm{km\,s^{-1}}$ steps, speeds up to $120\,\mathrm{km\,s^{-1}}$. The fastest beam (the February direct beam, about $130\,\mathrm{eV}$) arrives at about $80\,\mathrm{km\,s^{-1}}$ relative to Earth, so $120\,\mathrm{km\,s^{-1}}$ comfortably covers the distribution.
 
 ### `density_samples(r_vec, params, ...)` and `density(r_vec, beta0, params)`
 
-These do the same for the **density** at a point, in the Sun's rest frame: origin $\mathbf{0}$, sign +1, and $d^3v = s^2\,ds\,d\Omega$ (power = 2). The weights are in cm⁻³. `density()` is a convenience wrapper that returns the total, direct and indirect densities for one $\beta_0$.
+These do the same for the **density** at a point, in the Sun's rest frame: origin $\mathbf{0}$, sign $+1$, and $d^3v = s^2\,ds\,d\Omega$ ($\mathrm{power} = 2$). The weights are in $\mathrm{cm^{-3}}$. `density()` is a convenience wrapper that returns the total, direct and indirect densities for one $\beta_0$.
 
 ### `VelocitySamples`, the stored result
 
@@ -234,7 +234,7 @@ A dataclass holding, for every kept cell: `w` (weight at unit survival), `X`, `s
   `beta0` can be an array, which is how whole tables over $\beta_0$ are made in one call. Since the density enters $f$ linearly, `density=` simply rescales the result.
 - `mean(quantity, beta0, ...)`: a flux-weighted mean, e.g. the mean beam energy $\langle E\rangle = \sum w_i e^{-\beta_0X_i}E_i / \sum w_i e^{-\beta_0X_i}$.
 - `centroid(beta0, ...)`: the beam's mean arrival direction (the normalized flux-weighted sum of the unit vectors), and its RMS angular width (the flux-weighted RMS angle from that centroid). The width is used to decide when the two beams overlap on the sky.
-- `skymap(beta0, ...)`: bins the weighted samples into sky pixels (`np.bincount`) and divides by each pixel's solid angle, giving the directional flux in cm⁻² s⁻¹ sr⁻¹.
+- `skymap(beta0, ...)`: bins the weighted samples into sky pixels (`np.bincount`) and divides by each pixel's solid angle, giving the directional flux in $\mathrm{cm^{-2}\,s^{-1}\,sr^{-1}}$.
 
 ---
 
@@ -290,12 +290,12 @@ with $m$ the model counts and $n$ the observed counts. It behaves like $\chi^2$ 
 
 Simulates what a **spinning, Sun-pointing detector** sees:
 
-- the spin axis $\hat{\mathbf{a}}$ points to the Sun (longitude $\lambda_E + 180°$, latitude 0), optionally offset along the ecliptic;
-- the boresight makes a fixed angle $p$ (the pivot angle) with the spin axis. It is 90° for IBEX-Lo, and adjustable for IMAP-Lo, whose detector sits on a pivot platform;
+- the spin axis $\hat{\mathbf{a}}$ points to the Sun (longitude $\lambda_E + 180^{\circ}$, latitude $0$), optionally offset along the ecliptic;
+- the boresight makes a fixed angle $p$ (the pivot angle) with the spin axis. It is $90^{\circ}$ for IBEX-Lo, and adjustable for IMAP-Lo, whose detector sits on a pivot platform;
 - as the spacecraft spins, the boresight traces a circle of radius $p$ around the Sun:
   $$\hat{\mathbf{l}}(\phi) = \cos p\,\hat{\mathbf{a}} + \sin p\,(\cos\phi\,\hat{\mathbf{e}}_1 + \sin\phi\,\hat{\mathbf{e}}_2).$$
 
-Here $\hat{\mathbf{e}}_1$ is the direction towards ecliptic north projected perpendicular to the spin axis, so spin phase $\phi = 0$ is the northernmost point, and $\hat{\mathbf{e}}_2 = \hat{\mathbf{a}}\times\hat{\mathbf{e}}_1$. The sky map is interpolated along the circle with a `RegularGridInterpolator`; one extra column is copied onto each side so the interpolation wraps around 0°/360°. It returns the spin phase, the look longitude and latitude, and the flux along the circle.
+Here $\hat{\mathbf{e}}_1$ is the direction towards ecliptic north projected perpendicular to the spin axis, so spin phase $\phi = 0$ is the northernmost point, and $\hat{\mathbf{e}}_2 = \hat{\mathbf{a}}\times\hat{\mathbf{e}}_1$. The sky map is interpolated along the circle with a `RegularGridInterpolator`; one extra column is copied onto each side so the interpolation wraps around $0^{\circ}/360^{\circ}$. It returns the spin phase, the look longitude and latitude, and the flux along the circle.
 
 The model does not include a collimator response, so this is the flux along the boresight direction, not a count rate.
 
